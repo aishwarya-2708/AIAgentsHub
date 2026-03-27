@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "MCTS Web AI Agent",
+  "version": "2.0",
+  "description": "Chrome extension for MCTS-based AI Agent with R-MCTS, WM-MCTS and MCTS-RAG variants.",
+
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "https://en.wikipedia.org/*"
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "MCTS Web AI Agent"
+  },
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+
+  "icons": {
+    "16":  "icon16.png",
+    "48":  "icon48.png",
+    "128": "icon128.png"
+  }
+}

@@ -1,0 +1,12 @@
+# backend/requirements.txt
+
+fastapi
+uvicorn
+langchain
+langchain-ollama
+pydantic
+requests
+beautifulsoup4
+lxml
+numpy
+python-dotenv

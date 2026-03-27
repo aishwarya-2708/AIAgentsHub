@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>📘 Smart Homework Helper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script>
+        function dismissMessage() {
+            const statusDiv = document.getElementById('file-status');
+            if (statusDiv) {
+                statusDiv.style.display = 'none';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="main-title">🧠 Smart Homework Helper</h1>
+        <p class="subtitle">Ask any homework question, upload your notes once, and get step-by-step answers!</p>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="/mcts" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; border-radius: 5px; text-decoration: none; font-weight: bold; font-size: 1.05em; transition: all 0.3s;">
+                🚀 Explore with MCTS
+            </a>
+        </div>
+        
+        {% if uploaded_filename %}
+            <div id="file-status" class="status-message success">
+                ✅ **Notes Loaded (from file):** **{{ uploaded_filename }}**
+                <span class="dismiss-cross" onclick="dismissMessage()">❌</span>
+            </div>
+        {% endif %}
+
+        <form action="/ask" method="POST" enctype="multipart/form-data">
+            <label class="form-label">📝 Upload Notes (PDF):</label>
+            <input type="file" name="notes" accept="application/pdf"><br>
+
+            <label class="form-label">❓ Your Question:</label>
+            <input type="text" name="question" placeholder="Enter your homework question" 
+                   value="{{ question if question else '' }}"><br>
+
+            <button type="submit" class="submit-button">Get Answer</button>
+        </form>
+
+        {% if question %}
+            <h2 class="result-heading">📖 Question:</h2>
+            <p class="result-text">{{ question }}</p>
+        {% endif %}
+
+        {% if answer %}
+            <h2 class="result-heading">💡 Answer:</h2>
+            <div class="answer-box">{{ answer }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>

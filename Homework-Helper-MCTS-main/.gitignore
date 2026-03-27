@@ -1,0 +1,16 @@
+# Ignore Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore virtual environment
+homework_env/
+
+# Ignore logs, temp files
+*.log
+temp.pdf
+
+# System files
+.DS_Store
+Thumbs.db

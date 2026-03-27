@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Projects Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            height: 100 vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background: #1e293b;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 2px solid #334155;
+        }
+        
+        .title h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .title p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        
+        .project-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .project-btn {
+            padding: 10px 24px;
+            background: #334155;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .project-btn:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+        
+        .project-btn.active {
+            background: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+        
+        .close-btn {
+            padding: 8px 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .close-btn:hover {
+            background: #dc2626;
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            background: #1e293b;
+            padding: 8px 25px;
+            font-size: 13px;
+            color: #94a3b8;
+            border-bottom: 1px solid #334155;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Content Area */
+        .content {
+            flex: 1;
+            position: relative;
+            background: white;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+            background: #f8fafc;
+        }
+        
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .empty-state p {
+            font-size: 1rem;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        /* Loading Overlay */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e293b;
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            display: none;
+            z-index: 1000;
+            font-size: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 20px 30px;
+            border-radius: 12px;
+            display: none;
+            z-index: 1000;
+            text-align: center;
+            max-width: 400px;
+            border: 1px solid #fecaca;
+        }
+        
+        .error button {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: #991b1b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+
+        /* Make content take full window */
+.content {
+    flex: 1;
+    position: relative;
+    background: white;
+    height: calc(100vh - 120px); /* Adjusts to fill window minus header */
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+/* Make body take full height */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">
+            <h1>AI Agents</h1>
+            <p>Integration of 4 AI Agents</p>
+        </div>
+        <div class="project-buttons" id="projectButtons">
+            <!-- Buttons will be added here -->
+        </div>
+        <button class="close-btn" onclick="closeProject()">✕ Close</button>
+    </div>
+    
+    <div class="status-bar">
+        <span id="statusMessage">Ready</span>
+        <span id="connectionStatus"></span>
+    </div>
+    
+    <div class="content">
+        <div class="empty-state" id="emptyState">
+            <h3>📁 No Project Selected</h3>
+            <p>Click any project button above to view it</p>
+        </div>
+        <iframe id="projectFrame" style="display: none;"></iframe>
+    </div>
+    
+    <div class="loading" id="loading">
+        ⏳ Loading project...
+    </div>
+    
+    <div class="error" id="error">
+        <div id="errorMessage"></div>
+        <button onclick="hideError()">OK</button>
+    </div>
+
+    <script>
+        // ⚠️ UPDATE THESE PORTS TO MATCH YOUR PROJECTS ⚠️
+        const projects = {
+            1: {
+                name: "📊 Project 1",
+                url: "http://localhost:5001",  // ← CHANGE IF NEEDED
+                description: "First Flask Application"
+            },
+            2: {
+                name: "🔍 Project 2",
+                url: "http://localhost:5007",  // ← CHANGE IF NEEDED
+                description: "Second Flask Application"
+            },
+            3: {
+                name: "📝 Project 3",
+                url: "http://localhost:5000",  // ← CHANGE IF NEEDED
+                description: "Third Flask Application"
+            },
+            4: {
+                // name: "📈 Project 4",
+                // url: "http://localhost:8000",  // ← CHANGE IF NEEDED
+                // description: "Fourth Flask Application"
+
+                 name: "🌐 MCTS Web Agent",
+        url: "chrome://extensions/",
+        description: "Browser Extension - Click to open Chrome Extensions"
+            }
+        };
+        
+        // Create buttons
+        const buttonsContainer = document.getElementById('projectButtons');
+        
+        for (const [id, project] of Object.entries(projects)) {
+            const button = document.createElement('button');
+            button.className = 'project-btn';
+            button.innerHTML = project.name;
+            button.title = project.description;
+            button.onclick = () => loadProject(id);
+            buttonsContainer.appendChild(button);
+        }
+        
+        const iframe = document.getElementById('projectFrame');
+        const emptyState = document.getElementById('emptyState');
+        const loading = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const statusMessage = document.getElementById('statusMessage');
+        const connectionStatus = document.getElementById('connectionStatus');
+        
+        function loadProject(projectId) {
+            const project = projects[projectId];
+            if (!project) return;
+            
+
+            if (projectId == 4) {
+        // Open Chrome extensions page for project 4
+        window.open('chrome://extensions/', '_blank');
+        alert('Extension loaded in Chrome. Click the puzzle icon to use it.');
+    }
+
+    else{
+        
+            // Update UI
+            statusMessage.textContent = `Loading ${project.name}...`;
+            connectionStatus.textContent = '🔄 Connecting';
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            
+            // Update active button
+            const buttons = document.querySelectorAll('.project-btn');
+            buttons.forEach((btn, index) => {
+                if (index == projectId - 1) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Load project
+            iframe.src = project.url;
+            iframe.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            // Handle successful load
+            iframe.onload = function() {
+                loading.style.display = 'none';
+                statusMessage.textContent = `Viewing ${project.name} - ${project.url}`;
+                connectionStatus.textContent = '✅ Connected';
+                errorDiv.style.display = 'none';
+            };
+            
+            // Handle error
+            iframe.onerror = function() {
+                loading.style.display = 'none';
+                statusMessage.textContent = `❌ Failed to load ${project.name}`;
+                connectionStatus.textContent = '❌ Offline';
+                document.getElementById('errorMessage').innerHTML = `
+                    <strong>Cannot connect to ${project.name}</strong><br><br>
+                    Make sure it's running on:<br>
+                    <code style="background:#f1f5f9; padding:4px 8px; border-radius:4px; display:inline-block; margin:8px 0;">${project.url}</code><br><br>
+                    Check terminal for errors.
+                `;
+                errorDiv.style.display = 'block';
+            };
+            
+            // Timeout for slow loading
+            const timeout = setTimeout(() => {
+                if (loading.style.display === 'block') {
+                    loading.style.display = 'none';
+                    statusMessage.textContent = `⏰ Timeout: ${project.name} not responding`;
+                    document.getElementById('errorMessage').innerHTML = `
+                        <strong>${project.name} is taking too long to load</strong><br><br>
+                        Check if it's running on:<br>
+                        <code style="background:#f1f5f9; padding:4px 8px; border-radius:4px; display:inline-block; margin:8px 0;">${project.url}</code><br><br>
+                        Make sure the port is correct.
+                    `;
+                    errorDiv.style.display = 'block';
+                }
+            }, 10000);
+            
+            iframe.onload = function() {
+                clearTimeout(timeout);
+                loading.style.display = 'none';
+                statusMessage.textContent = `Viewing ${project.name}`;
+                connectionStatus.textContent = '✅ Connected';
+            };
+    }
+
+
+
+
+
+
+        }
+        
+        function closeProject() {
+            iframe.src = 'about:blank';
+            iframe.style.display = 'none';
+            emptyState.style.display = 'flex';
+            statusMessage.textContent = 'Ready';
+            connectionStatus.textContent = '';
+            errorDiv.style.display = 'none';
+            
+            // Remove active class
+            const buttons = document.querySelectorAll('.project-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+        }
+        
+        function hideError() {
+            errorDiv.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>🧠 MCTS Reasoning Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; }
+        .mcts-container { max-width: 1100px; margin: 20px auto; padding: 20px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .control-panel { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .viewer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; text-align: center; }
+        .stat-val { font-size: 1.5rem; font-weight: bold; color: #667eea; }
+        .log-area { background: #1e1e1e; color: #adff2f; padding: 15px; border-radius: 8px; height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.9rem; border: 4px solid #333; }
+        .log-entry { border-bottom: 1px solid #333; padding: 4px 0; }
+        .progress-bar { width: 100%; height: 20px; background: #eee; border-radius: 10px; overflow: hidden; margin: 15px 0; }
+        .progress-fill { height: 100%; background: #2ecc71; width: 0%; transition: width 0.3s; }
+        .best-path { background: #e8f4fd; border-left: 5px solid #3498db; padding: 15px; margin-top: 20px; display: none; }
+        .final-answer { background: #f1f8e9; border: 1px solid #c5e1a5; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; }
+        .badge { background: #3498db; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; margin-right: 5px; }
+    </style>
+</head>
+<body>
+<div class="mcts-container">
+    <h1 style="text-align:center">🧠 MCTS Reasoning Explorer</h1>
+
+    <div class="control-panel">
+        <label>Question to Explore:</label>
+        <input type="text" id="question" style="width:100%; padding:10px; margin:10px 0; border-radius:4px; border:none;">
+        <label>Iterations:</label>
+        <input type="number" id="iters" value="15" style="width:60px; padding:5px; border-radius:4px; border:none;">
+        <label>Variation:</label>
+        <select id="variation" style="padding:5px; border-radius:4px; border:none;">
+            <option>Standard</option>
+            <option>R-MCTS</option>
+            <option>MCTS-RAG</option>
+            <option>World-Guided MCTS</option>
+        </select>
+        <button id="startBtn" onclick="runMCTS()" style="padding:10px 20px; background:#2ecc71; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:10px;">🚀 Start Deep Reasoning</button>
+    </div>
+
+    <div class="viewer-grid">
+        <div class="stat-card"><div>Iterations</div><div id="v-iter" class="stat-val">0</div></div>
+        <div class="stat-card"><div>Nodes</div><div id="v-nodes" class="stat-val">0</div></div>
+        <div class="stat-card"><div>Depth</div><div id="v-depth" class="stat-val">0</div></div>
+        <div class="stat-card"><div>Tree Value</div><div id="v-score" class="stat-val">0.0</div></div>
+    </div>
+
+    <div class="progress-bar"><div id="p-fill" class="progress-fill"></div></div>
+
+    <h3>📝 Reasoning Log</h3>
+    <div id="log" class="log-area"></div>
+
+    <div id="pathBox" class="best-path">
+        <strong>Optimal Strategy Path:</strong> <div id="pathContent" style="margin-top:10px"></div>
+    </div>
+
+    <div id="ansBox" class="final-answer">
+        <h3 style="margin-top:0">✅ Final Verified Answer</h3>
+        <div id="ansContent"></div>
+    </div>
+</div>
+
+<script>
+async function runMCTS() {
+    const btn = document.getElementById('startBtn');
+    const question = document.getElementById('question').value;
+    const iterations = document.getElementById('iters').value;
+    const variation = document.getElementById('variation').value;
+
+    btn.disabled = true;
+    document.getElementById('log').innerHTML = '<div class="log-entry">Initializing Tree Search...</div>';
+    document.getElementById('ansBox').style.display = 'none';
+    document.getElementById('pathBox').style.display = 'none';
+
+    const response = await fetch('/mcts/explore', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({question: question, max_iterations: iterations, variation: variation})
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        lines.forEach(line => {
+            if (line.startsWith('data: ')) {
+                const data = JSON.parse(line.substring(6));
+                if (data.iteration) {
+                    document.getElementById('v-iter').innerText = data.iteration;
+                    document.getElementById('v-nodes').innerText = data.nodes_explored;
+                    document.getElementById('v-depth').innerText = data.tree_depth;
+                    document.getElementById('v-score').innerText = data.root_value.toFixed(2);
+                    document.getElementById('p-fill').style.width = (data.iteration/iterations*100) + '%';
+
+                    const logLine = document.createElement('div');
+                    logLine.className = 'log-entry';
+                    logLine.innerText = `[Step ${data.iteration}] ${data.thought}`;
+                    const log = document.getElementById('log');
+                    log.appendChild(logLine);
+                    log.scrollTop = log.scrollHeight;
+                }
+
+                if (data.done) {
+                    document.getElementById('ansBox').style.display = 'block';
+                    document.getElementById('ansContent').innerText = data.summary;
+                    document.getElementById('pathBox').style.display = 'block';
+                    document.getElementById('pathContent').innerHTML = data.best_solution_path.map(p => `<span class="badge">${p}</span>`).join(' → ');
+                    btn.disabled = false;
+                }
+            }
+        });
+    }
+}
+</script>
+</body>
+</html>

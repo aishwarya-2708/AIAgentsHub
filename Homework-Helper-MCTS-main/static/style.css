@@ -1,0 +1,124 @@
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #eef2f7; 
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    background: white;
+    padding: 35px 40px;
+    border-radius: 16px; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
+}
+
+.main-title {
+    text-align: center;
+    color: #4a7dff; 
+    font-size: 2.5em;
+    margin-bottom: 5px;
+    font-weight: 700;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #444;
+    display: block; 
+    margin-bottom: 5px;
+    margin-top: 15px;
+}
+
+input[type="text"], input[type="file"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box; 
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus {
+    border-color: #4a7dff;
+    box-shadow: 0 0 0 3px rgba(74, 125, 255, 0.2);
+    outline: none;
+}
+
+.submit-button {
+    background: #4a7dff;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: background-color 0.3s, transform 0.1s;
+    box-shadow: 0 4px 10px rgba(74, 125, 255, 0.3);
+}
+
+.submit-button:hover {
+    background: #3966e3; 
+    box-shadow: 0 6px 15px rgba(74, 125, 255, 0.4);
+}
+
+.submit-button:active {
+    transform: translateY(1px);
+}
+
+.result-heading {
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 5px;
+    margin-top: 30px;
+}
+
+.answer-box {
+    background: #f7f9ff; 
+    padding: 20px;
+    border: 1px solid #d4e3ff; 
+    border-radius: 10px;
+    margin-top: 15px;
+    line-height: 1.6;
+    white-space: pre-wrap; 
+}
+
+.status-message {
+    padding: 12px 20px;
+    margin-bottom: 25px;
+    border-radius: 10px;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.success {
+    background: #e9ffea; 
+    border: 1px solid #38c172; 
+    color: #1f7b44; 
+}
+
+.dismiss-cross {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.2em;
+    padding: 0 8px;
+    line-height: 1; 
+    transition: color 0.2s;
+}
+
+.dismiss-cross:hover {
+    color: #d9534f; 
+}

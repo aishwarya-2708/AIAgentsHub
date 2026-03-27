@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agents Dashboard | Unified Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(59,130,246,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Header */
+        .header {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+            z-index: 10;
+            position: relative;
+        }
+        
+        .title h1 {
+            font-size: 1.6rem;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+        
+        .title p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        
+        .project-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .project-btn {
+            padding: 10px 24px;
+            background: rgba(51, 65, 85, 0.8);
+            color: white;
+            border: 1px solid rgba(100, 116, 139, 0.5);
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .project-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.4);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .project-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .project-btn:hover {
+            background: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+            border-color: #3b82f6;
+        }
+        
+        .project-btn.active {
+            background: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            border-color: #60a5fa;
+        }
+        
+        .close-btn {
+            padding: 8px 20px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        
+        .close-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+        }
+        
+        /* Status Bar */
+        .status-bar {
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(5px);
+            padding: 8px 30px;
+            font-size: 13px;
+            color: #94a3b8;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+            display: flex;
+            justify-content: space-between;
+            z-index: 10;
+            position: relative;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Content Area */
+        .content {
+            flex: 1;
+            position: relative;
+            background: #ffffff;
+            z-index: 5;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #64748b;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .empty-state h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #334155;
+        }
+        
+        .empty-state p {
+            font-size: 1rem;
+            color: #64748b;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        
+        /* Loading Overlay */
+        .loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 25px 45px;
+            border-radius: 20px;
+            display: none;
+            z-index: 1000;
+            font-size: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(59, 130, 246, 0.3);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fef2f2;
+            color: #991b1b;
+            padding: 25px 35px;
+            border-radius: 20px;
+            display: none;
+            z-index: 1000;
+            text-align: center;
+            max-width: 450px;
+            border: 2px solid #fecaca;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .error button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background: #991b1b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .error button:hover {
+            background: #7f1a1a;
+            transform: scale(1.05);
+        }
+        
+        /* Extension Helper Panel */
+        .extension-helper {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 15px;
+            color: white;
+            font-size: 13px;
+            z-index: 100;
+            border-left: 3px solid #3b82f6;
+            display: none;
+            max-width: 300px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .extension-helper.show {
+            display: block;
+        }
+        
+        .extension-helper h4 {
+            margin-bottom: 8px;
+            color: #60a5fa;
+        }
+        
+        .extension-helper p {
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        
+        .extension-helper button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px 20px;
+            }
+            
+            .title h1 {
+                font-size: 1.2rem;
+            }
+            
+            .project-btn {
+                padding: 6px 15px;
+                font-size: 12px;
+            }
+            
+            .close-btn {
+                padding: 6px 15px;
+                font-size: 12px;
+            }
+            
+            .status-bar {
+                padding: 6px 20px;
+                font-size: 11px;
+            }
+        }
+        
+        /* Make content take full window */
+        .content {
+            flex: 1;
+            position: relative;
+            background: white;
+            height: calc(100vh - 120px);
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Tooltip */
+        .project-btn {
+            position: relative;
+        }
+        
+        .project-btn[data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            margin-bottom: 8px;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">
+            <h1>🤖 AI Agents Hub</h1>
+            <p>Unified Interface | 4 Intelligent Agents</p>
+        </div>
+        <div class="project-buttons" id="projectButtons">
+            <!-- Buttons will be added here -->
+        </div>
+        <button class="close-btn" onclick="closeProject()">✕ Close Panel</button>
+    </div>
+    
+    <div class="status-bar">
+        <div class="status-badge">
+            <span class="status-dot"></span>
+            <span id="statusMessage">Ready</span>
+        </div>
+        <span id="connectionStatus"></span>
+    </div>
+    
+    <div class="content">
+        <div class="empty-state" id="emptyState">
+            <div class="empty-state-icon">🚀</div>
+            <h3>Welcome to AI Agents Dashboard</h3>
+            <p>Select any agent from above to start exploring</p>
+        </div>
+        <iframe id="projectFrame" style="display: none;"></iframe>
+    </div>
+    
+    <div class="loading" id="loading">
+        <div class="loading-spinner"></div>
+        <div>Loading AI Agent...</div>
+    </div>
+    
+    <div class="error" id="error">
+        <div id="errorMessage"></div>
+        <button onclick="hideError()">Got it</button>
+    </div>
+    
+    <div class="extension-helper" id="extensionHelper">
+        <h4>🔌 Extension Guide</h4>
+        <p>1. Make sure backend is running on port 8000</p>
+        <p>2. Click the puzzle icon in Chrome toolbar</p>
+        <p>3. Pin the MCTS Web Agent extension</p>
+        <button onclick="openExtensionGuide()">Open Extensions Page</button>
+    </div>
+
+    <script>
+        // Project configurations - UPDATE PORTS AS NEEDED
+        const projects = {
+            1: {
+                name: "News AI Agent",
+                url: "http://localhost:5001",
+                description: "AI Text Summarization Agent",
+                type: "web",
+                color: "#3b82f6"
+            },
+            2: {
+                name: "Text Summarizer Agent",
+                url: "http://localhost:5007",
+                description: "Web Scraping & Analysis",
+                type: "web",
+                color: "#10b981"
+            },
+            3: {
+                name: "Homework Helper Agent",
+                url: "http://localhost:5000",
+                description: "MCTS-Based Learning Assistant",
+                type: "web",
+                color: "#f59e0b"
+            },
+            4: {
+                name: "MCTS Web Agent",
+                url: "chrome://extensions/",
+                description: "Browser Extension - AI Web Assistant",
+                type: "extension",
+                color: "#a78bfa"
+            }
+        };
+        
+        // Create buttons with enhanced styling
+        const buttonsContainer = document.getElementById('projectButtons');
+        
+        for (const [id, project] of Object.entries(projects)) {
+            const button = document.createElement('button');
+            button.className = 'project-btn';
+            button.innerHTML = project.name;
+            button.setAttribute('data-tooltip', project.description);
+            button.style.borderLeft = `3px solid ${project.color}`;
+            button.onclick = () => loadProject(id);
+            buttonsContainer.appendChild(button);
+        }
+        
+        const iframe = document.getElementById('projectFrame');
+        const emptyState = document.getElementById('emptyState');
+        const loading = document.getElementById('loading');
+        const errorDiv = document.getElementById('error');
+        const statusMessage = document.getElementById('statusMessage');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const extensionHelper = document.getElementById('extensionHelper');
+        
+        let currentProjectId = null;
+        
+        function loadProject(projectId) {
+            const project = projects[projectId];
+            if (!project) return;
+            
+            currentProjectId = projectId;
+            
+            // Hide extension helper initially
+            extensionHelper.classList.remove('show');
+            
+            // Handle extension type separately
+            if (project.type === 'extension') {
+                // Show helpful guide
+                extensionHelper.classList.add('show');
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    extensionHelper.classList.remove('show');
+                }, 8000);
+                
+                // Update UI for extension
+                statusMessage.textContent = `${project.name} - Extension Mode`;
+                connectionStatus.textContent = '🔌 Click extension icon';
+                
+                // Update active button
+                const buttons = document.querySelectorAll('.project-btn');
+                buttons.forEach((btn, index) => {
+                    if (index == projectId - 1) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                // Hide iframe and show extension info in empty state
+                iframe.style.display = 'none';
+                emptyState.style.display = 'flex';
+                emptyState.innerHTML = `
+                    <div class="empty-state-icon">🌐</div>
+                    <h3>${project.name}</h3>
+                    <p style="margin-bottom: 20px;">${project.description}</p>
+                    <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; max-width: 400px;">
+                        <p style="margin-bottom: 10px;">📌 <strong>How to use:</strong></p>
+                        <p>1. Ensure backend is running on <code>http://localhost:8000</code></p>
+                        <p>2. Click the puzzle icon (Extensions) in Chrome toolbar</p>
+                        <p>3. Find "MCTS Web Agent" and click to use</p>
+                        <button onclick="openExtensionGuide()" style="margin-top: 15px; padding: 8px 20px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer;">Open Extensions →</button>
+                    </div>
+                `;
+                
+                return;
+            }
+            
+            // Handle web projects (normal iframe loading)
+            // Update UI
+            statusMessage.textContent = `Loading ${project.name}...`;
+            connectionStatus.textContent = '🔄 Connecting';
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            
+            // Update active button
+            const buttons = document.querySelectorAll('.project-btn');
+            buttons.forEach((btn, index) => {
+                if (index == projectId - 1) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Reset empty state to default
+            emptyState.innerHTML = `
+                <div class="empty-state-icon">🚀</div>
+                <h3>Welcome to AI Agents Dashboard</h3>
+                <p>Select any agent from above to start exploring</p>
+            `;
+            
+            // Load project
+            iframe.src = project.url;
+            iframe.style.display = 'block';
+            emptyState.style.display = 'none';
+            
+            // Handle successful load
+            iframe.onload = function() {
+                loading.style.display = 'none';
+                statusMessage.textContent = `Active: ${project.name}`;
+                connectionStatus.textContent = '✅ Connected';
+                errorDiv.style.display = 'none';
+            };
+            
+            // Handle error
+            iframe.onerror = function() {
+                loading.style.display = 'none';
+                statusMessage.textContent = `❌ ${project.name} unavailable`;
+                connectionStatus.textContent = '❌ Offline';
+                document.getElementById('errorMessage').innerHTML = `
+                    <strong>⚠️ Cannot connect to ${project.name}</strong><br><br>
+                    Make sure it's running on:<br>
+                    <code style="background:#f1f5f9; padding:6px 10px; border-radius:6px; display:inline-block; margin:10px 0;">${project.url}</code><br><br>
+                    <strong>Quick Fix:</strong><br>
+                    1. Check if terminal is running<br>
+                    2. Verify port ${project.url.split(':')[2]} is correct<br>
+                    3. Restart the project
+                `;
+                errorDiv.style.display = 'block';
+                iframe.style.display = 'none';
+                emptyState.style.display = 'flex';
+            };
+            
+            // Timeout for slow loading
+            const timeout = setTimeout(() => {
+                if (loading.style.display === 'block') {
+                    loading.style.display = 'none';
+                    statusMessage.textContent = `⏰ Timeout: ${project.name}`;
+                    document.getElementById('errorMessage').innerHTML = `
+                        <strong>⏰ ${project.name} is taking too long</strong><br><br>
+                        Check if it's running on:<br>
+                        <code style="background:#f1f5f9; padding:6px 10px; border-radius:6px; display:inline-block; margin:10px 0;">${project.url}</code><br><br>
+                        The server might be starting up. Please wait a moment and try again.
+                    `;
+                    errorDiv.style.display = 'block';
+                }
+            }, 10000);
+            
+            iframe.onload = function() {
+                clearTimeout(timeout);
+                loading.style.display = 'none';
+                statusMessage.textContent = `Active: ${project.name}`;
+                connectionStatus.textContent = '✅ Connected';
+            };
+        }
+        
+        function closeProject() {
+            iframe.src = 'about:blank';
+            iframe.style.display = 'none';
+            emptyState.style.display = 'flex';
+            emptyState.innerHTML = `
+                <div class="empty-state-icon">🚀</div>
+                <h3>Welcome to AI Agents Dashboard</h3>
+                <p>Select any agent from above to start exploring</p>
+            `;
+            statusMessage.textContent = 'Ready';
+            connectionStatus.textContent = '';
+            errorDiv.style.display = 'none';
+            extensionHelper.classList.remove('show');
+            
+            // Remove active class
+            const buttons = document.querySelectorAll('.project-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            currentProjectId = null;
+        }
+        
+        function hideError() {
+            errorDiv.style.display = 'none';
+        }
+        
+        function openExtensionGuide() {
+            window.open('chrome://extensions/', '_blank');
+            extensionHelper.classList.remove('show');
+        }
+        
+        // Auto-refresh status check (optional)
+        setInterval(() => {
+            if (currentProjectId && projects[currentProjectId]?.type === 'web') {
+                const project = projects[currentProjectId];
+                fetch(project.url, { mode: 'no-cors' })
+                    .catch(() => {
+                        // Silently fail - don't spam errors
+                    });
+            }
+        }, 30000);
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeProject();
+            }
+            // Number keys 1-4 to switch projects
+            if (e.key >= '1' && e.key <= '4') {
+                loadProject(parseInt(e.key));
+            }
+        });
+    </script>
+</body>
+</html>
